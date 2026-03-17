@@ -45,7 +45,7 @@ Transformers and scaling seems to be everything. There's a systems level approac
 Would be cool to do an array version. But the other thing we need to run this on a few documents and see what the model keeps as far as unique toknes and what it keeps as far as common tokens.   
 
 # Proability perspective
-Pool all the text you can -- you have a higher probability of seeing common words and short words than you do of seeing key words. This is especially the case when the corpus includes multiple domains. So data on Dostoevsky is going to have a different distribution than data on malaria -- and malaria data is going to change from the 1900s to today with the introduction of novel medical technology used in its study. 
+Pool all the text you can -- you have a higher probability of seeing common words and short words than you do of seeing key words. This is especially the case when the corpus includes multiple domains. So data on Dostoevsky is going to have a different distribution than data on malaria -- and malaria data is going to change from the 1900s to today with the introduction of novel medical technology used in its study. What happens when the language updates? field changes over time. ... recent shift in industry folks only thinking of LLMs as AI despite all the other algorithms out there. -- I think Lanier and Wiener have quotes on this topic, but I need to check . Either way it implies the need for a continuously updating system.  This is what it means to detect distribution shift ... hm. 
 
 Wikipedia has a frequency list for every language ... and for English it has the words on wikipedia -- oh. run the tokenizer on the ICD10 based pages, vs the word list...[]
 
@@ -57,6 +57,8 @@ We know this - it's why TFIDF exists. But it's still something to consider in th
 2. Assuming that the scaling thing is just a property of networks, then if we get more efficient sub-blocks and scale those, then we should be able to get better models down the line.... This got me thiking about the tokenizer -> and now at the end of this short rabbit hole -- ended up seeing that tokenizers really act to compress the input in a meaningful way before you ever talk about training an embedding --> plus , from a probabilty stand point you should get different token sets on different data sub batches than you would 
 
 3. For specialized domains we care about the tokenizer, dont just use the techniques right out of the box. - maybe. 
+
+4. What happens when the language updates? New protein is discovered, people change the definition and usage of words over time, etc.  
 
 # References
 [1] David Goldberg. 1991. What every computer scientist should know about floating-point arithmetic. ACM Comput. Surv. 23, 1 (March 1991), 5–48. https://doi.org/10.1145/103162.103163.

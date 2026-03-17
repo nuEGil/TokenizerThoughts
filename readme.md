@@ -52,7 +52,6 @@ Wikipedia has a frequency list for every language ... and for English it has the
 We know this - it's why TFIDF exists. But it's still something to consider in the tokinzation step. The token set you learn informs the embeddings which inform the transformer which returns novel token sequences --> or if you're classifying something else then it's classifying right .
 
 # Takeaways
- 
 1. Deep learning has always been about a numerical solution to an analyitic approximation problem. We know we can approximate any function because theres a proof for that, but now train it...
    
 2. Assuming that the scaling thing is just a property of networks, then if we get more efficient sub-blocks and scale those, then we should be able to get better models down the line.... This got me thiking about the tokenizer -> and now at the end of this short rabbit hole -- ended up seeing that tokenizers really act to compress the input in a meaningful way before you ever talk about training an embedding --> plus , from a probabilty stand point you should get different token sets on different data sub batches than you would 

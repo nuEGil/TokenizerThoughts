@@ -1,18 +1,12 @@
 # Rough Draft of Tokenization background
-check out the ipython notebook for how to make and run the c++ code, and then it also has calls for the cpp programs and the python scripts
-
-* still need to make a step to ingest the learned token sets and use that in a python script to run the tokenization.... 
-* also need to try to compare token sets across different books... 
-* and then do a histogram of the sequence legnths.... 
-in progress. 
-
-On pricing that you see on most API providers. Watts and Volts are fixed, tokens are not. Would be better to do measures in floating point operations, or bytes or something. 
+Check out the ipython notebook for how to make and run the c++ code. It also has calls for the c++ programs and the python scripts. 
 
 # Abstract
-Transformers and scaling seems to be everything. There's a systems level approach to the optimization probelm that involves the tokenizer step. so scale, but scale efficiently. --
+Transformers and scaling seems to be everything. There's a systems level approach to the optimization probelm that involves the tokenizer step. so scale, but scale efficiently. 
+---
 
 # Contents
-1. Floating point operation and precision. 
+1. Floating point operation and precision 
 2. Transformers and scaling
 3. Tokenizers
 4. Probability perspective
@@ -20,12 +14,18 @@ Transformers and scaling seems to be everything. There's a systems level approac
 6. References
 
 # Floating point operation and precision
-* Goldberg published a paper on the IEEE floating point standard to provide better support for floating point [1]. It's 1991 and it's a while before AlexNet kicks off a DL renaissance. Computational modeling is more concerned with physics based simulations. You could think about solving differential equations involved in compressible fluids mechanics, and structural mechanics for things like designing novel aircraft wings or for better flight controls systems. It could be computational software to compute the shear forces on a bridge or a sky scraper -- things of this nature.
-* Wikipedia on test functions for optimization problems - this gives some intuition and test cases for whatever your optimizer is and whether your loss function is learnable.[8]. Pick a function, we will see convexity, high local optima, and saddle points. Then things change as these functions get into higher dimenssions. Any loss function you write for a deep learning problem is gonna run into these types of issues in high dimensions.  
-* AdamW - Adam was adaptive momentum, you can decouplpe the weight decay regularization...[9]
-* 2022 - FP8 formats [6] -- now we are back to gold berg, since we are concerned about classifiers we can actually get rid of a alot of the floating point precision in the parameters -- keep it int the optimizer and in the gradients, and get models that still train well. More on model quantization [7].
+In 1991 David Goldberg published a paper on floating point operations and resulting error propagation in computation [1]. His goal was to inform a discussion on the IEEE floating point standard, and provide some rationale for building better / standardized floating point support into computer systems in general. Floating point operations and precision are critical in physics based modeling, agent based simulations, and in control systems work. That means solving differential equations involved in compressible fluids mechanics, and structural mechanics for software involved in designing  aircraft components and in flight contorl systems. It's the same area of work as computing the stress tensors, and strains on a bridge or a skyscraper. For other computational methods, you'd have prediction of disease epidemiology with agent based models, plant optimization software for designing chemical plants and elecritcal grids. In telecomms it was like tracking satelites and sending data back and forth for personal communication. Your buzzwords here, are going to be agent based modeling, finite element analysis, and physics based modeling; Things of that nature. 
+
+This type of software often involves large scale itterative computations. A lot of the math involves vectors, matrices --> tensor operations as the generalized form. CPUs are designed for general purpose and sequential operations, but tensor math can be heavily parallelized. GPUs are designed with that in mind. NVIDIA ends up releasing CUDA in 2007 as a way to give developers a general programming interface for GPUs, and suddenly you can start running larger computations. This is great for applications that have analytic solutions or that have numerically acheivable solutions. But in cases like image classification and language analysis your best bet if general function approximation. There's a proof showing that neural networks are universal function approximators, but the challenge is achiving a useful approximation given a finite discrete computer. 
+
+The point that Goldberg had brought up is that youd end up with large errors in numerical approaches because of lack of guard bits, rounding, and substration based error. As a quick example of something like this, you can take a look at the test function optimization page on wikipedia [8]. These functions are notoriously difficult to numerically optimize, for a variety of reasons. Some have multiple global minima, lots of local minima, exhibit saddle points, and can have different optima depending on the dimension of the input. In some cases you need a high degree of numerical precision to even be able to search the surface. If you're designing any kind of optimizer algorithm like gradient descent and its variants then these are the test functions that show where that method will be effective. For loss functions we can assume a particular manifold, but in practice that surface depends on the data and the model being used; meaning that we will run into variations of these optimizer problems over the course of designing machine learning applications.  It's why in 2014 we get Adam, an updated gradient descent with momentum [18]. Then in 2017 there's AdamW with the decoupled weight decay variant[9]. And the improvement continues. 
+
 
 # Transformers and scaling
+Now with all that in mind, in 2012 Kischevsky and Sutskever under Hinton train AlexNet on 2 NVIDIA GPUs and win a large scale image reconition challenge kicking off a new deep learning boom. 
+
+* 2022 - FP8 formats [6] -- now we are back to gold berg, since we are concerned about classifiers we can actually get rid of a alot of the floating point precision in the parameters -- keep it int the optimizer and in the gradients, and get models that still train well. More on model quantization [7].
+
 * 2017 we get the transformer achitecture in attention is all you need [2]. Offers more representational capacity than we have from previous models --> look at the math behind the attention block (after the dash is a rabit hole for that brunton section)- looks like SVD -- so a learnable kernel svd basically. SVD is just one of many bases, so this gets
 * 2019 Deep double descent [3]-- hyper scaling starts as we see a regime where model testing loss gets way better than we thought - originally we thought the models would just overfit. this is apparently not the case. -- demonstrated for resnet and transformer - i think, need to check 
 * 2020 Scaling Laws for Neural Language models [4]- we can predictably see that the models will get logarithmic scaling with more data, more parameters, and more training... so push that till we can't  -- seems like the mesage. 
@@ -59,6 +59,8 @@ We know this - it's why TFIDF exists. But it's still something to consider in th
 3. For specialized domains we care about the tokenizer, dont just use the techniques right out of the box. - maybe. 
 
 4. What happens when the language updates? New protein is discovered, people change the definition and usage of words over time, etc.  
+
+5. On pricing that you see on most API providers. Watts and Volts are fixed, tokens are not. Would be better to do measures in floating point operations, or bytes or something.
 
 # References
 [1] David Goldberg. 1991. What every computer scientist should know about floating-point arithmetic. ACM Comput. Surv. 23, 1 (March 1991), 5–48. https://doi.org/10.1145/103162.103163.
@@ -95,3 +97,4 @@ We know this - it's why TFIDF exists. But it's still something to consider in th
 
 [17] https://en.wiktionary.org/wiki/Wiktionary:Frequency_lists/English/Wikipedia_(2016)/10001-20000
 
+[18] Diederik Kingma, Jimmy Ba. Adam: A method for stochastic optimization (22 Dec 2014) https://arxiv.org/abs/1412.6980

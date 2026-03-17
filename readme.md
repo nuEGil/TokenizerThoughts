@@ -9,9 +9,8 @@ Transformers and scaling seems to be everything. There's a systems level approac
 2. Transformers 
 3. Scaling
 4. Tokenizers
-5. Probability perspective
-6. Takeaways
-7. References
+5. Takeaways
+6. References
 
 # Floating point operation and precision
 In 1991 David Goldberg published a paper on floating point operations and resulting error propagation in computation [1]. His goal was to inform a discussion on the IEEE floating point standard, and provide some rationale for building better / standardized floating point support into computer systems in general. Floating point operations and precision are critical in physics based modeling, agent based simulations, and in control systems work. That means solving differential equations involved in compressible fluids mechanics, and structural mechanics for software involved in designing  aircraft components and in flight contorl systems. It's the same area of work as computing the stress tensors, and strains on a bridge or a skyscraper. For other computational methods, you'd have prediction of disease epidemiology with agent based models, plant optimization software for designing chemical plants and elecritcal grids. In telecomms it was like tracking satelites and sending data back and forth for personal communication. Your buzzwords here, are going to be agent based modeling, finite element analysis, and physics based modeling; Things of that nature. 
@@ -46,38 +45,35 @@ Then we start seeing all this research on hyperscaling. The 2019 Deep double des
 
 But in practice, virtual machines cost money, and your implementation leaves memory on the table. In 2022, we get FlashAttention which is an improvement on the memory implementation of attention blocks, and focuses on improving I/O [5]. Later in 2022 NVIDIA publishes on FP8 formats [6]. Up to this point we had seen a lot of floating point 32 and 64, but this paper keeps the model parameters in an 8 bit floating point type, and uses mixed types for the optimizer tracking and gradient updates. Despite the loss of precision with the parameters, they were able to achieve minimal errors in classification benchmarks. So Goldberg taught us, we need the precision for regression and signals, this new format says, well hold on, for classifiers we don't need as much. NVIDIA has a blog on this model quantization so its worth it to check it out and read more. [7]. 
 
-Now the take away, is that the text models are giant next token classifiers, so quantization seems to work well in language modeling as well. In practice, it's why you're seeing large companies release quantized parameter sets; it's cheaper to run those on the virtual machines for nearly the same performance than the full precision parameter set.
+Now the take away, is that the text models are giant next-token classifiers, so quantization seems to work well in language modeling as well. In practice, it's why you're seeing large companies release quantized parameter sets; it's cheaper to run those on the virtual machines for nearly the same performance than the full precision parameter set.
 
 # Tokenizers
-Now, realize that the llms are classifying token sequences --> numeric representations of text.
+So, what are tokens? Why do they charge you by the 1 million tokens for API calls and what not? In text and NLP a token is a number that represents 3-5 characters on average. It's taken to mean the smallest, most semantically meaningful piece of text. So like syllables in some cases, word roots, whole words in somecases. At a byte level your computer recognizes 256 potential values. This covers lower and upper case letters, punctuation, control characters in ASCII and extended ASCII/Latin. 
 
-* A tokenizer takes a small chunk of bytes and says - that's number 1, or that's 233. It already has some element of compression involved --> rewrite 4 bytes as 1 in a look up table.
-* BPE already is derived from a compression algorithm -- bottom up- so start with common bigrams and end with sequences. WordPiece is also bottom up. Unigram is top down. 
-* BERT and versions of BERT all of them use WordPeice - BERT Original paper used WordPiece Tokenization [10] ( see how much data it was trained on ). BioBert [11] - custom version of bert using - 4.5B words, 13.5B words. PsychBert -pay wall [12]
-* Medical Knowledge repre [13] -- uses byte pair encoding BECAUSE it will give you custom text
-* Comes up a lot in other languages  --turkish model [14] already doing this comparison between WorPiece and BPE.
+So tokenizers are 2 part peices of code. They are 
+1. Vocabulary learners. They find a set of text sequences that can be used as keys in a look up table when you want to go from text to numbers in a meaningful way.
+2. An encoder/decoder pair where you use the look up table to convert between text and numbers freely.  
 
-...we need the array implementation to work on large corpora -> 1.7MB @ 5s --> 3.4 million tokens per second is not good enough hm . actually. at 1.47billion (e9) words... say...x3 - looking at 1297s or about a half an hour to tokenize something like 18GB of text.... but I havent evaluated this algorithm for long runs -- if average step time changes over that 30 minute run, then there's a memory ineficiency... hm. also havent tried writing a python or a bash script to call like 5 of those execuatbles up in parallel... that's something to test out... run in parrallel, consolidate lists at the end. interesting. 
+After the tokenizer converts text to numbers, then we use embeddings to find meaningful vector spaces --> change of bases from 1 number domain to another, and then train a transformer on top to go from embeddings to a new vector space or to a classifier. But since tokenizers can represent sequences of text as well as individual characters, they add a layer of compression to the text data. 
 
-Would be cool to do an array version. But the other thing we need to run this on a few documents and see what the model keeps as far as unique toknes and what it keeps as far as common tokens.   
+Two tokenizers that come up all over the literature are WordPiece and Byte Pair encoding. Both of these are bottom up algorithms that learn sequences from smaller sub words first. Both have greedy implementations. For word piece it picks the longest matches first, while BPE starts with the bigrams (2 letters) that occur most often and grows sequences from there. 
 
-# Proability perspective
-Pool all the text you can -- you have a higher probability of seeing common words and short words than you do of seeing key words. This is especially the case when the corpus includes multiple domains. So data on Dostoevsky is going to have a different distribution than data on malaria -- and malaria data is going to change from the 1900s to today with the introduction of novel medical technology used in its study. What happens when the language updates? field changes over time. ... recent shift in industry folks only thinking of LLMs as AI despite all the other algorithms out there. -- I think Lanier and Wiener have quotes on this topic, but I need to check . Either way it implies the need for a continuously updating system.  This is what it means to detect distribution shift ... hm. 
+Bidirectional encoder representation tranformer (BERT) and versions of BERT all use WordPeice [10] BERT ued 800M words from BookCorpus, and then 2500M words from English wikipedia text. The draw back is that the probability distribution of commonly used words in the english language skews to shorter words; longer words tend to be used for domain specific text. It's why we have Term Frequency Inverse Document Frequence (TFIDF) for NLP and key word finding. So for example, Doestoevsky's books, and books on his writing are going to have different word and token distributions than books on and journal articles on malaria. And malaria data is going to change from the 1900s to today because of the introduction of novel medical technology used in its study and treatment. If the language and its meaning shift, so does to token set you need to describe that language. That's why we have custom BERT models like BioBert, which was trained on 4.5B words from PubMed, 13.5B words from PMC [11]. There's also PyschBert (but it's behind a pay wall) [12]. This group actually uses their own byte pair encoding because they notice that the available tokenizers were splitting medical terms into to many peices [13]. So there is good rationale to own everything from the data set, to the tokenizer, and even training the transformer in cases where you need custom text segmentation / classification / sentiment analysis. 
 
-Wikipedia has a frequency list for every language ... and for English it has the words on wikipedia -- oh. run the tokenizer on the ICD10 based pages, vs the word list...[]
+Now, As far as token counts go, that bioBertCorpus is 18 billion words (10^9). Say its like 2 tokens per word so 36 billion tokens. Then like 3 characters per token so like 108 billion characters -- that'd but us int he ball park of a bout 100 Gigabytes give or take for the whole set. Now, BPE is derived from a compression algorithm, so these seqeunces get shorter the more compressed the represetation is. That's useful though because EHRs are like 16k+ tokens a pop, with about 50% of that data being duplicated notes [19]. 
 
-We know this - it's why TFIDF exists. But it's still something to consider in the tokinzation step. The token set you learn informs the embeddings which inform the transformer which returns novel token sequences --> or if you're classifying something else then it's classifying right .
+With all tat in mind, the C++ implementation I did in the repo that uses a doubly linked list, a static counter, and a priority queue, ends up getting through 1.7 million characters (1.7MB) in about 5 seconds. 3.4million tokens per second is good enough for this proof of concept, but at like 1.47 billion words if you just ran a single executable it's take 1297s -- half an hour to get through 18 GB of text. But you can wrap it in a python or bash script to to parallelize this thing and then just aggregate the token sets at the end. That being said, there is an optimal BPE tokenizer that makes use of a set of arrays to handle this, and it's much faster. so likely it's something good to implement in the future. 
+
+* theres also work comparing BPE and word peice for tokenization in other languages like turkish [14]. so multilingual models, and applications where people work together in various languages are relavnet here. 
 
 # Takeaways
-1. Deep learning has always been about a numerical solution to an analyitic approximation problem. We know we can approximate any function because theres a proof for that, but now train it...
+1. Deep learning has always been about a numerical solution to an continuous analytical approximation problem. We know we can approximate any function because theres a proof for that, but now train it.
    
-2. Assuming that the scaling thing is just a property of networks, then if we get more efficient sub-blocks and scale those, then we should be able to get better models down the line.... This got me thiking about the tokenizer -> and now at the end of this short rabbit hole -- ended up seeing that tokenizers really act to compress the input in a meaningful way before you ever talk about training an embedding --> plus , from a probabilty stand point you should get different token sets on different data sub batches than you would 
+2. If we want to keep scaling we should invest in efficient scaling, then we should be able to get better models down the line. But tokenizers compress your text sequences so the availability of more and more informative text sequences is questionable. 
 
-3. For specialized domains we care about the tokenizer, dont just use the techniques right out of the box. - maybe. 
+3. For specialized domains we care about custom tokenizers. As a field changes, its language changes implying the need to continuously improve /train tokenizers and all the down stream components as a result.   
 
-4. What happens when the language updates? New protein is discovered, people change the definition and usage of words over time, etc.  
-
-5. On pricing that you see on most API providers. Watts and Volts are fixed, tokens are not. Would be better to do measures in floating point operations, or bytes or something.
+5. On pricing that you see on most API providers. Watts and Volts are fixed, tokens are not. Would be better to do measures in floating point operations, or bytes.
 
 # References
 [1] David Goldberg. 1991. What every computer scientist should know about floating-point arithmetic. ACM Comput. Surv. 23, 1 (March 1991), 5–48. https://doi.org/10.1145/103162.103163.
@@ -115,3 +111,5 @@ We know this - it's why TFIDF exists. But it's still something to consider in th
 [17] https://en.wiktionary.org/wiki/Wiktionary:Frequency_lists/English/Wikipedia_(2016)/10001-20000
 
 [18] Diederik Kingma, Jimmy Ba. Adam: A method for stochastic optimization (22 Dec 2014) https://arxiv.org/abs/1412.6980
+
+[19] Steinkamp J, Kantrowitz JJ, Airan-Javia S. Prevalence and Sources of Duplicate Information in the Electronic Medical Record. JAMA Netw Open. 2022;5(9):e2233348. doi:10.1001/jamanetworkopen.2022.33348

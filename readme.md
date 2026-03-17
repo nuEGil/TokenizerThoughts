@@ -4,12 +4,21 @@ Check out the ipython notebook for how to make and run the c++ code. It also has
 # Abstract
 Transformers and scaling seems to be everything. There's a systems level approach to the optimization probelm that involves the tokenizer step. so scale, but scale efficiently. 
 
+# Takeaways
+1. Deep learning has always been about a numerical solution to an continuous analytical approximation problem. We know we can approximate any function because theres a proof for that, but now train it.
+   
+2. If we want to keep scaling we should invest in efficient scaling, then we should be able to get better models down the line. But tokenizers compress your text sequences so the availability of more and more informative text sequences is questionable. 
+
+3. For specialized domains we care about custom tokenizers. As a field changes, its language changes implying the need to continuously improve /train tokenizers and all the down stream components as a result.   
+
+5. On pricing that you see on most API providers. Watts and Volts are fixed, tokens are not. Would be better to do measures in floating point operations, or bytes.
+
 # Contents
-1. Floating point operation and precision 
-2. Transformers 
-3. Scaling
-4. Tokenizers
-5. Takeaways
+1. Takeaways
+2. Floating point operation and precision 
+3. Transformers 
+4. Scaling
+5. Tokenizers 
 6. References
 
 # Floating point operation and precision
@@ -65,15 +74,6 @@ Now, As far as token counts go, that bioBertCorpus is 18 billion words (10^9). S
 With all tat in mind, the C++ implementation I did in the repo that uses a doubly linked list, a static counter, and a priority queue, ends up getting through 1.7 million characters (1.7MB) in about 5 seconds. 3.4million tokens per second is good enough for this proof of concept, but at like 1.47 billion words if you just ran a single executable it's take 1297s -- half an hour to get through 18 GB of text. But you can wrap it in a python or bash script to to parallelize this thing and then just aggregate the token sets at the end. That being said, there is an optimal BPE tokenizer that makes use of a set of arrays to handle this, and it's much faster. so likely it's something good to implement in the future. 
 
 * theres also work comparing BPE and word peice for tokenization in other languages like turkish [14]. so multilingual models, and applications where people work together in various languages are relavnet here. 
-
-# Takeaways
-1. Deep learning has always been about a numerical solution to an continuous analytical approximation problem. We know we can approximate any function because theres a proof for that, but now train it.
-   
-2. If we want to keep scaling we should invest in efficient scaling, then we should be able to get better models down the line. But tokenizers compress your text sequences so the availability of more and more informative text sequences is questionable. 
-
-3. For specialized domains we care about custom tokenizers. As a field changes, its language changes implying the need to continuously improve /train tokenizers and all the down stream components as a result.   
-
-5. On pricing that you see on most API providers. Watts and Volts are fixed, tokens are not. Would be better to do measures in floating point operations, or bytes.
 
 # References
 [1] David Goldberg. 1991. What every computer scientist should know about floating-point arithmetic. ACM Comput. Surv. 23, 1 (March 1991), 5–48. https://doi.org/10.1145/103162.103163.

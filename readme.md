@@ -1,17 +1,22 @@
-Intro section in progress but this is the rough sketch. -- still need to make a step to ingest the learned token sets and use that in a python script to run the tokenization.... also need to try to compare token sets across different books... and then do a histogram of the sequence legnths.... in progress. 
+# Rough Draft of Tokenization background
 
-...we need the array implementation to work on large corpora -> 1.7MB @ 5s --> 3.4 million tokens per second is not good enough hm . actually. at 1.47billion (e9) words... say...x3 - looking at 1297s or about a half an hour to tokenize something like 18GB of text.... but I havent evaluated this algorithm for long runs. Need to test array logic.  
+* still need to make a step to ingest the learned token sets and use that in a python script to run the tokenization.... 
+* also need to try to compare token sets across different books... 
+* and then do a histogram of the sequence legnths.... 
+in progress. 
+
+On pricing that you see on most API providers. Watts and Volts are fixed, tokens are not. Would be better to do measures in floating point operations, or bytes or something. 
 
 # Abstract
 Transformers and scaling seems to be everything. There's a systems level approach to the optimization probelm that involves the tokenizer step. so scale, but scale efficiently. --
 
 # Contents
-1. Floating point operation precision. 
-2. Brunton's data driven science and engineering -> what SVD and FFT mean for text
-3. Bigram tokenization and reconstruction errors
-4. Does a better tokenizer help with this problem
-5. Tokenizer optimization and the C++ rabbit hole
-6. Token sets on individual docs vs an aggregated set. 
+1. Floating point operation and precision. 
+2. Transformers and scaling
+3. Tokenizers
+4. Probability perspective
+5. Takeaways
+6. References
 
 # Floating point operation and precision
 * Goldberg published a paper on the IEEE floating point standard to provide better support for floating point [1]. It's 1991 and it's a while before AlexNet kicks off a DL renaissance. Computational modeling is more concerned with physics based simulations. You could think about solving differential equations involved in compressible fluids mechanics, and structural mechanics for things like designing novel aircraft wings or for better flight controls systems. It could be computational software to compute the shear forces on a bridge or a sky scraper -- things of this nature.
@@ -25,12 +30,18 @@ Transformers and scaling seems to be everything. There's a systems level approac
 * 2020 Scaling Laws for Neural Language models [4]- we can predictably see that the models will get logarithmic scaling with more data, more parameters, and more training... so push that till we can't  -- seems like the mesage. 
 * 2022 - Flash attention [5] ok we know that we are going to scale, but can we be more efficient about it?
 
+* SVD and compressed sensing? Transformers as compression? Tokenizer is definitely compression.. 
+
 # Tokenizers
+* A tokenizer takes a small chunk of bytes and says - that's number 1, or that's 233. It already has some element of compression involved --> rewrite 4 bytes as 1 in a look up table.
+* BPE already is derived from a compression algorithm -- bottom up- so start with common bigrams and end with sequences. WordPiece is also bottom up. Unigram is top down. 
 * BERT and versions of BERT all of them use WordPeice - BERT Original paper used WordPiece Tokenization [10] ( see how much data it was trained on ). BioBert [11] - custom version of bert using - 4.5B words, 13.5B words. PsychBert -pay wall [12]
 * Medical Knowledge repre [13] -- uses byte pair encoding BECAUSE it will give you custom text
 * Comes up a lot in other languages  --turkish model [14] already doing this comparison between WorPiece and BPE.
 
-...we need the array implementation to work on large corpora -> 1.7MB @ 5s --> 3.4 million tokens per second is not good enough hm . actually. at 1.47billion (e9) words... say...x3 - looking at 1297s or about a half an hour to tokenize something like 18GB of text.... but I havent evaluated this algorithm for long runs. Need to test array logic. But the other thing we need to run this on a few documents and see what the model keeps as far as unique toknes and what it keeps as far as common tokens.   
+...we need the array implementation to work on large corpora -> 1.7MB @ 5s --> 3.4 million tokens per second is not good enough hm . actually. at 1.47billion (e9) words... say...x3 - looking at 1297s or about a half an hour to tokenize something like 18GB of text.... but I havent evaluated this algorithm for long runs -- if average step time changes over that 30 minute run, then there's a memory ineficiency... hm. also havent tried writing a python or a bash script to call like 5 of those execuatbles up in parallel... that's something to test out... run in parrallel, consolidate lists at the end. interesting. 
+
+Would be cool to do an array version. But the other thing we need to run this on a few documents and see what the model keeps as far as unique toknes and what it keeps as far as common tokens.   
 
 # Proability perspective
 Pool all the text you can -- you have a higher probability of seeing common words and short words than you do of seeing key words. This is especially the case when the corpus includes multiple domains. So data on Dostoevsky is going to have a different distribution than data on malaria -- and malaria data is going to change from the 1900s to today with the introduction of novel medical technology used in its study. 
@@ -45,8 +56,9 @@ We know this - it's why TFIDF exists. But it's still something to consider in th
    
 2. Assuming that the scaling thing is just a property of networks, then if we get more efficient sub-blocks and scale those, then we should be able to get better models down the line.... This got me thiking about the tokenizer -> and now at the end of this short rabbit hole -- ended up seeing that tokenizers really act to compress the input in a meaningful way before you ever talk about training an embedding --> plus , from a probabilty stand point you should get different token sets on different data sub batches than you would 
 
-3. For specialized domains we care about the tokenizer, dont just use the techniques right out of the box. -- maybe. 
+3. For specialized domains we care about the tokenizer, dont just use the techniques right out of the box. - maybe. 
 
+# References
 [1] David Goldberg. 1991. What every computer scientist should know about floating-point arithmetic. ACM Comput. Surv. 23, 1 (March 1991), 5–48. https://doi.org/10.1145/103162.103163.
 
 [2] Ashish Vaswani et al. 2017, Attention is all you need
@@ -76,6 +88,8 @@ We know this - it's why TFIDF exists. But it's still something to consider in th
 [14] Cagri Toraman, Eyup Halit Yilmaz, Furkan Şahi̇nuç, and Oguzhan Ozcelik. 2023. Impact of Tokenization on Language Models: An Analysis for Turkish. ACM Trans. Asian Low-Resour. Lang. Inf. Process. 22, 4, Article 116 (April 2023), 21 pages. https://doi.org/10.1145/3578707
 
 [15] https://en.wikipedia.org/wiki/Most_common_words_in_English
+
 [16] https://en.wiktionary.org/wiki/Wiktionary:Frequency_lists
+
 [17] https://en.wiktionary.org/wiki/Wiktionary:Frequency_lists/English/Wikipedia_(2016)/10001-20000
 

@@ -3,15 +3,15 @@ Check out the ipython notebook for how to make and run the c++ code. It also has
 
 # Abstract
 Transformers and scaling seems to be everything. There's a systems level approach to the optimization probelm that involves the tokenizer step. so scale, but scale efficiently. 
----
 
 # Contents
 1. Floating point operation and precision 
-2. Transformers and scaling
-3. Tokenizers
-4. Probability perspective
-5. Takeaways
-6. References
+2. Transformers 
+3. Scaling
+4. Tokenizers
+5. Probability perspective
+6. Takeaways
+7. References
 
 # Floating point operation and precision
 In 1991 David Goldberg published a paper on floating point operations and resulting error propagation in computation [1]. His goal was to inform a discussion on the IEEE floating point standard, and provide some rationale for building better / standardized floating point support into computer systems in general. Floating point operations and precision are critical in physics based modeling, agent based simulations, and in control systems work. That means solving differential equations involved in compressible fluids mechanics, and structural mechanics for software involved in designing  aircraft components and in flight contorl systems. It's the same area of work as computing the stress tensors, and strains on a bridge or a skyscraper. For other computational methods, you'd have prediction of disease epidemiology with agent based models, plant optimization software for designing chemical plants and elecritcal grids. In telecomms it was like tracking satelites and sending data back and forth for personal communication. Your buzzwords here, are going to be agent based modeling, finite element analysis, and physics based modeling; Things of that nature. 
@@ -20,20 +20,37 @@ This type of software often involves large scale itterative computations. A lot 
 
 The point that Goldberg had brought up is that youd end up with large errors in numerical approaches because of lack of guard bits, rounding, and substration based error. As a quick example of something like this, you can take a look at the test function optimization page on wikipedia [8]. These functions are notoriously difficult to numerically optimize, for a variety of reasons. Some have multiple global minima, lots of local minima, exhibit saddle points, and can have different optima depending on the dimension of the input. In some cases you need a high degree of numerical precision to even be able to search the surface. If you're designing any kind of optimizer algorithm like gradient descent and its variants then these are the test functions that show where that method will be effective. For loss functions we can assume a particular manifold, but in practice that surface depends on the data and the model being used; meaning that we will run into variations of these optimizer problems over the course of designing machine learning applications.  It's why in 2014 we get Adam, an updated gradient descent with momentum [18]. Then in 2017 there's AdamW with the decoupled weight decay variant[9]. And the improvement continues. 
 
+# Transformers
+With all that in mind, in 2012 Kischevsky and Sutskever under Hinton train AlexNet (convolutional network) on 2 NVIDIA GPUs and win a large scale image reconition challenge kicking off a new deep learning boom. We get a lot of architecture improvements from residual networks that include an identity function to make it eaiser to propagate errors back during training, to inception models, to RNNs and CNN-LSTM combintaitons for sequence learning etc. In 2017 we get the transformer achitecture [2]. Offers more representational capacity than we have from previous models.
 
-# Transformers and scaling
-Now with all that in mind, in 2012 Kischevsky and Sutskever under Hinton train AlexNet on 2 NVIDIA GPUs and win a large scale image reconition challenge kicking off a new deep learning boom. 
+Here's a handwaving argument for this. The formula for the attention block is
 
-* 2022 - FP8 formats [6] -- now we are back to gold berg, since we are concerned about classifiers we can actually get rid of a alot of the floating point precision in the parameters -- keep it int the optimizer and in the gradients, and get models that still train well. More on model quantization [7].
+    Attention = Softmax((QK)/sqrt(dk)) V
 
-* 2017 we get the transformer achitecture in attention is all you need [2]. Offers more representational capacity than we have from previous models --> look at the math behind the attention block (after the dash is a rabit hole for that brunton section)- looks like SVD -- so a learnable kernel svd basically. SVD is just one of many bases, so this gets
-* 2019 Deep double descent [3]-- hyper scaling starts as we see a regime where model testing loss gets way better than we thought - originally we thought the models would just overfit. this is apparently not the case. -- demonstrated for resnet and transformer - i think, need to check 
-* 2020 Scaling Laws for Neural Language models [4]- we can predictably see that the models will get logarithmic scaling with more data, more parameters, and more training... so push that till we can't  -- seems like the mesage. 
-* 2022 - Flash attention [5] ok we know that we are going to scale, but can we be more efficient about it?
+Q, K, and V expand out to matrices operating on input vectors. So you're applying a kernel on 2 matrix operators scaling the output and then doing one more matrix operation. Compare that to singular value decomposition which is
 
-* SVD and compressed sensing? Transformers as compression? Tokenizer is definitely compression.. 
+    x = UEV*
+
+SVD gives you a representaiton of the data in a new basis. E is the singular value matrix, and then U and V* are right and left matrices. Low rank truncations of UEV* you end up with a good approximation of X with smaller operators. This is one of many types of change of bases like the fourier transform, laplace transform, and discrete cosine transform, that are useable for all sorts of problems. 
+
+Compressed sensing sums it up as
+
+    x = C psi s = theta s
+
+Where C is a Gaussian or Bernouli random matrix, psi is your change of basis, and s is a sparse vector. Theta is just C and psi. Now Q and K are randomly initialized any way, and during the learning process Q,K,V reach an optimal set -- so it's closer to this stuff than one would imagine from a handwaving argument. 
+
+For more information on this topic check out Steve Brunton's books. For this repo though, it's why I take a look at FFTs on the token sequences. Might be useful down the line. 
+
+# Scaling
+Then we start seeing all this research on hyperscaling. The 2019 Deep double descent paper found a regime where model test loss continues to improve with more parmeters, more data, and longer training [3]. Before that, the conventional wisdom from statistical learning approaches was that models would just over fit unless the data far exceeds the parameters; this is now an argument for intentional overparameterization. The 2020 Scaling Laws paper, further quantified this and showed that performance predictably scales logarithmically with data, parameters and compute [4]. Within this body of work, the message seems to be to scale until we can no longer get any kind of improvement.  
+
+But in practice, virtual machines cost money, and your implementation leaves memory on the table. In 2022, we get FlashAttention which is an improvement on the memory implementation of attention blocks, and focuses on improving I/O [5]. Later in 2022 NVIDIA publishes on FP8 formats [6]. Up to this point we had seen a lot of floating point 32 and 64, but this paper keeps the model parameters in an 8 bit floating point type, and uses mixed types for the optimizer tracking and gradient updates. Despite the loss of precision with the parameters, they were able to achieve minimal errors in classification benchmarks. So Goldberg taught us, we need the precision for regression and signals, this new format says, well hold on, for classifiers we don't need as much. NVIDIA has a blog on this model quantization so its worth it to check it out and read more. [7]. 
+
+Now the take away, is that the text models are giant next token classifiers, so quantization seems to work well in language modeling as well. In practice, it's why you're seeing large companies release quantized parameter sets; it's cheaper to run those on the virtual machines for nearly the same performance than the full precision parameter set.
 
 # Tokenizers
+Now, realize that the llms are classifying token sequences --> numeric representations of text.
+
 * A tokenizer takes a small chunk of bytes and says - that's number 1, or that's 233. It already has some element of compression involved --> rewrite 4 bytes as 1 in a look up table.
 * BPE already is derived from a compression algorithm -- bottom up- so start with common bigrams and end with sequences. WordPiece is also bottom up. Unigram is top down. 
 * BERT and versions of BERT all of them use WordPeice - BERT Original paper used WordPiece Tokenization [10] ( see how much data it was trained on ). BioBert [11] - custom version of bert using - 4.5B words, 13.5B words. PsychBert -pay wall [12]

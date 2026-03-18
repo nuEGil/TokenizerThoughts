@@ -3,11 +3,12 @@ Check out the ipython notebook for how to make and run the c++ code. It also has
 
 # Contents
 1. Takeaways
-2. Floating point operation and precision 
-3. Transformers 
-4. Scaling
-5. Tokenizers 
-6. References
+2. Timing results
+3. Floating point operation and precision 
+4. Transformers 
+5. Scaling
+6. Tokenizers 
+7. References
 
 # Takeaways
 1. Deep learning has always been about a numerical solution to an continuous analytical approximation problem. We know we can approximate any function because theres a proof for that, but now train it.
@@ -17,6 +18,13 @@ Check out the ipython notebook for how to make and run the c++ code. It also has
 3. For specialized domains we care about custom tokenizers. As a field changes, its language changes implying the need to continuously improve /train tokenizers and all the down stream components as a result.   
 
 5. On pricing that you see on most API providers. Watts and Volts are fixed, tokens are not. Would be better to do measures in floating point operations, or bytes.
+
+# Timing results 
+512 steps of learning on crime and punishement - 1.7 million chars / 1.7 MB
+* Pyhton doubly linked list ~ 1 minute
+* C++ doubly linked list base ~ 11.5s 
+* C++ doubly linked list version with -O3 flag ~5.7 seconds
+* C++ array version -O3 flag ~1.2 s
 
 # Floating point operation and precision
 In 1991 David Goldberg published a paper on floating point operations and resulting error propagation in computation [1]. His goal was to inform a discussion on the IEEE floating point standard, and provide some rationale for building better / standardized floating point support into computer systems in general. Floating point operations and precision are critical in physics based modeling, agent based simulations, and in control systems work. That means solving differential equations involved in compressible fluids mechanics, and structural mechanics for software involved in designing  aircraft components and in flight contorl systems. It's the same area of work as computing the stress tensors, and strains on a bridge or a skyscraper. For other computational methods, you'd have prediction of disease epidemiology with agent based models, plant optimization software for designing chemical plants and elecritcal grids. In telecomms it was like tracking satelites and sending data back and forth for personal communication. Your buzzwords here, are going to be agent based modeling, finite element analysis, and physics based modeling; Things of that nature. 

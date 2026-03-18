@@ -226,7 +226,7 @@ class Chain {
 int main() {
     auto start_build = chrono::high_resolution_clock::now();
 
-    string filename_ = "/mnt/g/data/ebooks_public_domain/books/Crime_and_Punishment_.txt";
+    string filename_ = "bookdat/Crime_and_Punishment_.txt";
     Reader BookWorm(filename_);
     Chain  BMO(BookWorm.content);
 

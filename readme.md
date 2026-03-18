@@ -24,7 +24,7 @@ Check out the ipython notebook for how to make and run the c++ code. It also has
 * Pyhton doubly linked list ~ 1 minute
 * C++ doubly linked list base ~ 11.5s 
 * C++ doubly linked list version with -O3 flag ~5.7 seconds
-* C++ array version -O3 flag ~1.2 s
+* C++ array version -O3 flag ~1.1 s
 
 # Floating point operation and precision
 In 1991 David Goldberg published a paper on floating point operations and resulting error propagation in computation [1]. His goal was to inform a discussion on the IEEE floating point standard, and provide some rationale for building better / standardized floating point support into computer systems in general. Floating point operations and precision are critical in physics based modeling, agent based simulations, and in control systems work. That means solving differential equations involved in compressible fluids mechanics, and structural mechanics for software involved in designing  aircraft components and in flight contorl systems. It's the same area of work as computing the stress tensors, and strains on a bridge or a skyscraper. For other computational methods, you'd have prediction of disease epidemiology with agent based models, plant optimization software for designing chemical plants and elecritcal grids. In telecomms it was like tracking satelites and sending data back and forth for personal communication. Your buzzwords here, are going to be agent based modeling, finite element analysis, and physics based modeling; Things of that nature. 

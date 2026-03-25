@@ -412,6 +412,25 @@ map<int, string> receiveMap(int pipe_fd) {
     return vocab;
 }
 
+//check this out later.... interesting. 
+void saveVocabBinary(const string& filename, const map<string, int>& vocab) {
+    ofstream outFile(filename, ios::binary);
+    if (!outFile) return;
+
+    size_t vocabSize = vocab.size();
+    outFile.write(reinterpret_cast<const char*>(&vocabSize), sizeof(vocabSize));
+
+    for (const auto& [word, id] : vocab) {
+        // Write ID
+        outFile.write(reinterpret_cast<const char*>(&id), sizeof(id));
+        // Write String length and then data
+        size_t len = word.length();
+        outFile.write(reinterpret_cast<const char*>(&len), sizeof(len));
+        outFile.write(word.data(), len);
+    }
+    outFile.close();
+}
+
 
 int main() {
     // byte pair encoding can handle different languages! lol. 
@@ -495,6 +514,9 @@ int main() {
     }
     cout << "Successfully merged " << paths.size() << " books.\n";
     cout << "Unique Global Tokens: " << globalVocab.size() << endl;
+
+
+    saveVocabBinary("bookdat/vocab.bin", globalVocab);
 
     return 0;
 }
